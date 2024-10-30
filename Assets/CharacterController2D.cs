@@ -148,8 +148,8 @@ namespace Prime31
         [HideInInspector]
         [NonSerialized]
         public CharacterCollisionState2D collisionState = new CharacterCollisionState2D();
-        [HideInInspector]
-        [NonSerialized]
+        //[HideInInspector]
+        //[NonSerialized]
         public Vector3 velocity;
         public bool isGrounded { get { return collisionState.below; } }
 
