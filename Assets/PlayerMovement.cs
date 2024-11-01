@@ -1,135 +1,3 @@
-/*using Prime31;
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-
-public class PlayerMovement : MonoBehaviour
-{
-    // movement config
-    public float gravity = -25f;
-    public float runSpeed = 8f;
-    public float groundDamping = 20f; // how fast do we change direction? higher means faster
-    public float inAirDamping = 5f;
-    public float jumpHeight = 3f;
-
-    [HideInInspector]
-    private float normalizedHorizontalSpeed = 0;
-
-    //objects
-    private CharacterController2D _controller;
-    //private Animator _animator;
-    private RaycastHit2D _lastControllerColliderHit;
-    private Vector3 _velocity;
-
-
-    void Awake()
-    {
-        //_animator = GetComponent<Animator>();
-        _controller = GetComponent<CharacterController2D>();
-
-        // listen to some events for illustration purposes
-        _controller.onControllerCollidedEvent += onControllerCollider;
-        _controller.onTriggerEnterEvent += onTriggerEnterEvent;
-        _controller.onTriggerExitEvent += onTriggerExitEvent;
-    }
-
-
-    #region Event Listeners
-
-    void onControllerCollider(RaycastHit2D hit)
-    {
-        // bail out on plain old ground hits cause they arent very interesting
-        if (hit.normal.y == 1f)
-            return;
-
-        // logs any collider hits if uncommented. it gets noisy so it is commented out for the demo
-        //Debug.Log( "flags: " + _controller.collisionState + ", hit.normal: " + hit.normal );
-    }
-
-
-    void onTriggerEnterEvent(Collider2D col)
-    {
-        Debug.Log("onTriggerEnterEvent: " + col.gameObject.name);
-    }
-
-
-    void onTriggerExitEvent(Collider2D col)
-    {
-        Debug.Log("onTriggerExitEvent: " + col.gameObject.name);
-    }
-
-    #endregion
-
-
-    // the Update loop contains a very simple example of moving the character around and controlling the animation
-    void Update()
-    {
-        if (_controller.isGrounded)
-            _velocity.y = 0;
-
-        if (Input.GetKey(KeyCode.RightArrow))
-        {
-            normalizedHorizontalSpeed = 1;
-            if (transform.localScale.x < 0f)
-                transform.localScale = new Vector3(-transform.localScale.x, transform.localScale.y, transform.localScale.z);
-
-            if (_controller.isGrounded)
-            {
-                //_animator.Play(Animator.StringToHash("Run"));
-            }
-        }
-        else if (Input.GetKey(KeyCode.LeftArrow))
-        {
-            normalizedHorizontalSpeed = -1;
-            if (transform.localScale.x > 0f)
-                transform.localScale = new Vector3(-transform.localScale.x, transform.localScale.y, transform.localScale.z);
-
-            if (_controller.isGrounded)
-            {
-                //_animator.Play(Animator.StringToHash("Run"));
-            }
-        }
-        else
-        {
-            normalizedHorizontalSpeed = 0;
-
-            if (_controller.isGrounded)
-            {
-                //_animator.Play(Animator.StringToHash("Idle"));
-            }
-        }
-
-
-        // we can only jump whilst grounded
-        if (_controller.isGrounded && Input.GetKeyDown(KeyCode.UpArrow))
-        {
-            _velocity.y = Mathf.Sqrt(2f * jumpHeight * -gravity);
-            //_animator.Play(Animator.StringToHash("Jump"));
-        }
-
-
-        // apply horizontal speed smoothing it. dont really do this with Lerp. Use SmoothDamp or something that provides more control
-        var smoothedMovementFactor = _controller.isGrounded ? groundDamping : inAirDamping; // how fast do we change direction?
-        _velocity.x = Mathf.Lerp(_velocity.x, normalizedHorizontalSpeed * runSpeed, Time.deltaTime * smoothedMovementFactor);
-
-        // apply gravity before moving
-        _velocity.y += gravity * Time.deltaTime;
-
-        // if holding down bump up our movement amount and turn off one way platform detection for a frame.
-        // this lets us jump down through one way platforms
-        if (_controller.isGrounded && Input.GetKey(KeyCode.DownArrow))
-        {
-            _velocity.y *= 3f;
-            _controller.ignoreOneWayPlatformsThisFrame = true;
-        }
-
-        _controller.move(_velocity * Time.deltaTime);
-
-        // grab our current _velocity to use as a base for all calculations
-        _velocity = _controller.velocity;
-    }
-}*/
-
 using Prime31;
 using System.Collections;
 using System.Collections.Generic;
@@ -154,6 +22,32 @@ public class PlayerMovement : MonoBehaviour
     public AnimationCurve downDashCurve;
     private float downDashTimePosition;
     private float startingVelocityY;
+    public float downDashCooldown;
+    public float timeToNextDownDash = 0f;
+    public AudioSource diveSound;
+
+    [Header("Fall Damage")]
+    public bool justHitGround;
+    public float fallDamageVelocityThreshold;
+    public float fallDamageFactor;
+    public float fallDamageDashResistanceFactor;
+
+    [Header("Interactables")]
+    public bool inCobweb = false;
+    public float cobwebDamping;
+    public float cobwebSpeed;
+    public float jumpPadSpeed;
+    public bool hitJumpPad = false;
+    public float spikeDamage;
+    public float spikeDamageCooldown;
+    private float timeToNextSpikeDamage;
+
+    [Header("Effects")]
+    public ParticleSystem walkEffect;
+    public GameObject fallEffect;
+    public Transform fallEffectSpawnPoint;
+    public AudioSource jumpSound;
+
 
     [HideInInspector]
     private float normalizedHorizontalSpeed = 0;
@@ -167,16 +61,19 @@ public class PlayerMovement : MonoBehaviour
     private float jumpBufferCounter = 0f;
     private Vector2 currentVelocity = Vector2.zero;
     private Animator _animator;
+    private PlayerCombat combat;
 
     void Awake()
     {
         _controller = GetComponent<CharacterController2D>();
         _animator = GetComponent<Animator>();
+        combat = GetComponent<PlayerCombat>();
 
         // listen to some events for illustration purposes
         _controller.onControllerCollidedEvent += onControllerCollider;
         _controller.onTriggerEnterEvent += onTriggerEnterEvent;
         _controller.onTriggerExitEvent += onTriggerExitEvent;
+        _controller.onTriggerStayEvent += onTriggerStayEvent;
     }
 
     #region Event Listeners
@@ -189,11 +86,52 @@ public class PlayerMovement : MonoBehaviour
 
     void onTriggerEnterEvent(Collider2D col)
     {
+        if (col.CompareTag("HealthPickup"))
+        {
+            combat.heal(col.GetComponent<HealthPickup>().healAmount);
+            col.GetComponent<HealthPickup>().despawn();
+        }
+        if (col.CompareTag("Cobweb"))
+        {
+            inCobweb = true;
+        }
+        if (col.CompareTag("JumpPad"))
+        {
+            hitJumpPad = true;
+        }
         Debug.Log("onTriggerEnterEvent: " + col.gameObject.name);
+    }
+
+    void onTriggerStayEvent(Collider2D col)
+    {
+        if (col.CompareTag("Enemy"))
+        {
+            BasicEnemyMovement enemy = col.GetComponent<BasicEnemyMovement>();
+            if (enemy.canAttack && !isDownDashing)
+            {
+                combat.takeHit(enemy.damage);
+                enemy.timeToNextAttack = enemy.attackCooldown;
+                enemy.canAttack = false;
+            }
+            print("taking damage!");
+        }
+        if (col.CompareTag("Spikes"))
+        {
+            if (timeToNextSpikeDamage < 0)
+            {
+                combat.takeHit(spikeDamage);
+                timeToNextSpikeDamage = spikeDamageCooldown;
+            }
+        }
+        Debug.Log("onTriggerStayEvent: " + col.gameObject.name);
     }
 
     void onTriggerExitEvent(Collider2D col)
     {
+        if (col.CompareTag("Cobweb"))
+        {
+            inCobweb = false;
+        }
         Debug.Log("onTriggerExitEvent: " + col.gameObject.name);
     }
 
@@ -201,6 +139,9 @@ public class PlayerMovement : MonoBehaviour
 
     void Update()
     {
+        timeToNextSpikeDamage -= Time.deltaTime;
+        timeToNextDownDash -= Time.deltaTime;
+
         // Reduce buffer timer over time
         if (jumpBufferCounter > 0)
             jumpBufferCounter -= Time.deltaTime;
@@ -217,7 +158,12 @@ public class PlayerMovement : MonoBehaviour
                 _velocity.y = Mathf.Sqrt(2f * jumpHeight * -gravity);
                 isJumping = true;
                 jumpBufferCounter = 0f; // Reset buffer after jump
+                jumpSound.Play();
             }
+        }
+        else
+        {
+            _animator.Play(Animator.StringToHash("Player_Jump"));
         }
 
         if (Input.GetKey(KeyCode.RightArrow))
@@ -258,6 +204,8 @@ public class PlayerMovement : MonoBehaviour
             {
                 _velocity.y = Mathf.Sqrt(2f * jumpHeight * -gravity);
                 isJumping = true;
+                _animator.Play(Animator.StringToHash("Player_Jump"));
+                jumpSound.Play();
             }
             else
             {
@@ -275,15 +223,57 @@ public class PlayerMovement : MonoBehaviour
             }
         }
 
+
+        if (hitJumpPad)
+        {
+            if (isDownDashing)
+            {
+                timeToNextDownDash = downDashCooldown;
+                isDownDashing = false;
+            }
+            _velocity.y = jumpPadSpeed;
+            isJumping = true;
+            _animator.Play(Animator.StringToHash("Player_Jump"));
+            jumpSound.Play();
+            hitJumpPad = false;
+        }
+
         //handle downward dash
-        if (!_controller.isGrounded && Input.GetKeyDown(KeyCode.Z)) {
+        if (!_controller.isGrounded && Input.GetKeyDown(KeyCode.X) && timeToNextDownDash < 0 && !isDownDashing) {
             isDownDashing = true;
             startingVelocityY = _velocity.y;
+            diveSound.Play();
         }
         else if (_controller.isGrounded)
         {
-            //handle dash collision
+            if (justHitGround)
+            {
+                print("Just hit ground! Velocity: " + _controller.airVelocityY);
+                if (_controller.airVelocityY < -fallDamageVelocityThreshold && !hitJumpPad)
+                {
+                    Instantiate(fallEffect, fallEffectSpawnPoint.position, Quaternion.identity);
+                    if (isDownDashing)
+                    {
+                        combat.takeHit(-_controller.airVelocityY * fallDamageFactor * fallDamageDashResistanceFactor);
+                    }
+                    else
+                    {
+                        combat.takeHit(-_controller.airVelocityY * fallDamageFactor);
+                    }
+                }
+                if (isDownDashing)
+                {
+                    combat.diveAttack();
+                    timeToNextDownDash = downDashCooldown;
+                }
+                justHitGround = false;
+            }
             isDownDashing = false;
+        }
+
+        if (!_controller.isGrounded)
+        {
+            justHitGround = true;
         }
 
         // Apply gravity if not dashing down
@@ -319,6 +309,24 @@ public class PlayerMovement : MonoBehaviour
         {
             _velocity.y *= 3f;
             _controller.ignoreOneWayPlatformsThisFrame = true;
+        }
+
+        if (inCobweb)
+        {
+            _velocity.x = Mathf.SmoothDamp(_velocity.x, cobwebSpeed * normalizedHorizontalSpeed, ref currentVelocity.x, cobwebDamping);
+            //_velocity.y = Mathf.SmoothDamp(_velocity.y, cobwebSpeed * Mathf.Clamp(_velocity.y, -1, 1), ref currentVelocity.y, cobwebDamping);
+            _velocity.y = Mathf.SmoothDamp(_velocity.y, Mathf.Clamp(_velocity.y, -cobwebSpeed, cobwebSpeed), ref currentVelocity.y, cobwebDamping);
+        }
+
+        if (Mathf.Abs(_velocity.x) > 1 && _controller.isGrounded && !inCobweb)
+        {
+            if (walkEffect.isPlaying == false)
+            {
+                walkEffect.Play();
+            }
+        }
+        else {
+            walkEffect.Stop();
         }
 
         _controller.move(_velocity * Time.deltaTime);

@@ -20,8 +20,15 @@ public class RoomLayout : MonoBehaviour
     {
         Gizmos.color = Color.red;
         Gizmos.DrawWireCube(transform.position, new Vector3(roomSize.x, roomSize.y, 1f));
-    }
+        Gizmos.color = Color.red;
+        Transform parentPlatformLocations = transform.Find("PlatformLocations");
 
+        for (int i = 0; i < parentPlatformLocations.childCount; i++)
+        {
+            Gizmos.DrawWireSphere(parentPlatformLocations.GetChild(i).position, 2f);
+        }
+    }
+    /*
     void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.red;
@@ -31,7 +38,7 @@ public class RoomLayout : MonoBehaviour
         {
             Gizmos.DrawWireSphere(parentPlatformLocations.GetChild(i).position, 2f);
         }
-    }
+    }*/
 
     // Start is called before the first frame update
     void Start()

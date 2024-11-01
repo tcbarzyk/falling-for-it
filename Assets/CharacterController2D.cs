@@ -153,6 +153,8 @@ namespace Prime31
         public Vector3 velocity;
         public bool isGrounded { get { return collisionState.below; } }
 
+        public float airVelocityY;
+
         const float kSkinWidthFloatFudgeFactor = 0.001f;
 
         #endregion
@@ -247,6 +249,11 @@ namespace Prime31
         /// <param name="deltaMovement">Delta movement.</param>
         public void move(Vector3 deltaMovement)
         {
+            if (!isGrounded)
+            {
+                airVelocityY = velocity.y;
+            }
+
             // save off our current grounded state which we will use for wasGroundedLastFrame and becameGroundedThisFrame
             collisionState.wasGroundedLastFrame = collisionState.below;
 
