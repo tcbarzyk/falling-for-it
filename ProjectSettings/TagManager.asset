@@ -3,7 +3,14 @@
 --- !u!78 &1
 TagManager:
   serializedVersion: 2
-  tags: []
+  tags:
+  - Enemy
+  - Bullet
+  - HealthPickup
+  - Cobweb
+  - JumpPad
+  - Spikes
+  - Platform
   layers:
   - Default
   - TransparentFX
@@ -11,12 +18,12 @@ TagManager:
   - 
   - Water
   - UI
+  - Platform
+  - Player
+  - Enemy
+  - Bullet
   - 
-  - 
-  - 
-  - 
-  - 
-  - 
+  - Interactable
   - 
   - 
   - 
