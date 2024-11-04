@@ -2,6 +2,7 @@ using Cinemachine;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Rendering.Universal;
 
 public class PlayerCombat : MonoBehaviour
 {
@@ -35,7 +36,9 @@ public class PlayerCombat : MonoBehaviour
     public GameObject diveEffect;
     public AudioSource hitSound;
     public AudioSource diveHitSound;
+    public Light2D bigDiveLight;
 
+    private Animator animator;
     private SpriteRenderer entitySprite;
     private Material entityMaterial;
     private CinemachineImpulseSource impulseSource;
@@ -44,6 +47,7 @@ public class PlayerCombat : MonoBehaviour
     void Start()
     {
         health = maxHealth;
+        animator = GetComponent<Animator>();
         entitySprite = GetComponent<SpriteRenderer>();
         impulseSource = GetComponent<CinemachineImpulseSource>();
         entityMaterial = entitySprite.material;
@@ -81,7 +85,7 @@ public class PlayerCombat : MonoBehaviour
         health = Mathf.Clamp(health+amount, 0, maxHealth);
     }
 
-    void gameOver()
+    public void gameOver()
     {
         gameOverScreen.Setup();
         //end game
@@ -96,8 +100,14 @@ public class PlayerCombat : MonoBehaviour
         {
             GameObject bulletObj = Instantiate(bullet, bulletSpawnPoint.position, bulletSpawnPoint.rotation);
             shootSound.Play();
+            animator.Play(Animator.StringToHash("Player_Attack"));
             //bulletObj.GetComponent<Bullet>().isPlayerBullet = true;
             timeToNextFire = fireCooldown;
+        }
+
+        if (bigDiveLight.intensity >= 0f)
+        {
+            bigDiveLight.intensity -= 0.1f;
         }
     }
 
@@ -108,6 +118,8 @@ public class PlayerCombat : MonoBehaviour
         Instantiate(diveEffect, diveEffectSpawnPoint.position, Quaternion.identity);
 
         diveHitSound.Play();
+
+        bigDiveLight.intensity = 10f;
 
         // Loop through each enemy and apply damage
         foreach (Collider2D enemy in enemiesInRange)

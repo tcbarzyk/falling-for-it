@@ -6,8 +6,14 @@ using UnityEngine.UI;
 
 public class GameOverScreen : MonoBehaviour
 {
+    public AudioSource gameOverSound;
+    public AudioSource gameMusic;
+    public AudioSource gameOverMusic;
     public void Setup()
     {
+        gameOverSound.Play();
+        gameMusic.Stop();
+        gameOverMusic.Play();
         Time.timeScale = 0;
         gameObject.SetActive(true);
     }

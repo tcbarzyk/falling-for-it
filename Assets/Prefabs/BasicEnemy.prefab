@@ -188,14 +188,18 @@ MonoBehaviour:
   movementSmoothing: 0.1
   rayDist: 0.5
   animator: {fileID: 2989448661485160532}
-  damage: 2
+  layerMask:
+    serializedVersion: 2
+    m_Bits: 2369
+  damage: 200
   canAttack: 1
   attackCooldown: 2
   timeToNextAttack: 0
   attackingPlayer: 0
   healthPickup: {fileID: 2901982532709296478, guid: 40b1ee194526f4346a5d13385224a3be, type: 3}
-  healthPickupAmount: 4
-  healthPickupDropChance: 0.8
+  healthPickupAmount: 100
+  healthPickupDropChance: 0.6
+  dieEffect: {fileID: 6566798318717490157, guid: 4af6110642e096a46a73943b9ff96aaf, type: 3}
 --- !u!1 &3418453236395165289
 GameObject:
   m_ObjectHideFlags: 0
@@ -267,8 +271,8 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_SortingLayerID: 1727016381
+  m_SortingLayer: 2
   m_SortingOrder: 0
   m_Sprite: {fileID: 21300000, guid: 7f24de3a53010ee4fa1a0d6d08d68a67, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}

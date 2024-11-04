@@ -11,6 +11,7 @@ public class BasicEnemyMovement : MonoBehaviour
     public float movementSmoothing;
     public float rayDist;
     public Animator animator;
+    public LayerMask layerMask;
 
     [Header("Combat")]
     public float damage;
@@ -23,6 +24,7 @@ public class BasicEnemyMovement : MonoBehaviour
     public GameObject healthPickup;
     public float healthPickupAmount;
     public float healthPickupDropChance;
+    public GameObject dieEffect;
 
     private Transform groundCheckTransform;
     private CharacterController2D controller;
@@ -33,6 +35,11 @@ public class BasicEnemyMovement : MonoBehaviour
 
     void Awake()
     {
+        if (DangerManager.Instance.Danger >= 60)
+        {
+            healthPickupDropChance = Mathf.Clamp(healthPickupDropChance - (DangerManager.Instance.Danger / 3), 0, healthPickupDropChance);
+        }
+
         controller = GetComponent<CharacterController2D>();
         groundCheckTransform = transform.GetChild(0);
 
@@ -88,6 +95,7 @@ public class BasicEnemyMovement : MonoBehaviour
             GameObject pickupObj = Instantiate(healthPickup, gameObject.transform.position, Quaternion.identity);
             pickupObj.GetComponent<HealthPickup>().healAmount = Random.Range(healthPickupAmount * 0.8f, healthPickupAmount * 1.2f);
         }
+        Instantiate(dieEffect, new Vector3(transform.position.x, transform.position.y+2, transform.position.z), Quaternion.identity);
         Destroy(gameObject);
     }
 
@@ -112,9 +120,9 @@ public class BasicEnemyMovement : MonoBehaviour
         controller.move(velocity * Time.deltaTime);
         velocity = controller.velocity;
 
-        RaycastHit2D groundCheckRaycast = Physics2D.Raycast(groundCheckTransform.position, Vector2.down, rayDist);
+        RaycastHit2D groundCheckRaycast = Physics2D.Raycast(groundCheckTransform.position, Vector2.down, rayDist, layerMask);
         Vector2 obstacleCheckDirection = movingRight ? Vector2.right : Vector2.left;
-        RaycastHit2D obstacleCheckRaycast = Physics2D.Raycast(groundCheckTransform.position, obstacleCheckDirection, rayDist/2);
+        RaycastHit2D obstacleCheckRaycast = Physics2D.Raycast(groundCheckTransform.position, obstacleCheckDirection, rayDist/2, layerMask);
 
         if ((obstacleCheckRaycast.collider != null && obstacleCheckRaycast.collider.tag != "Player") || !groundCheckRaycast)
         {

@@ -6,7 +6,7 @@ public class RoomLayout : MonoBehaviour
 {
     public Vector2 roomSize;
     //danger should be from 0 to 100
-    public float danger = 0f;
+    private float danger = 0f;
     public int minPlatforms = 1;
     public bool onlySmallPlatforms = false;
 
@@ -43,6 +43,8 @@ public class RoomLayout : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        danger = DangerManager.Instance.Danger;
+
         //get all potential platform locations
         Transform parentPlatformLocations = transform.Find("PlatformLocations");
         platformLocations = new Transform[parentPlatformLocations.childCount];

@@ -46,42 +46,4 @@ public class Bullet : MonoBehaviour
             DestroyBullet();
         }
     }
-
-    /*
-    void OnTriggerEnter2D(Collider2D other)
-    {
-        print("Bullet collided :" + other.gameObject);
-
-        // Check if the object the bullet collided with is the player
-        if (other.CompareTag("Player"))
-        {
-            if (isPlayerBullet)
-            {
-                //do nothing
-            }
-            else
-            {
-                print("Player takes hit from bullet!");
-            }
-        }
-        else if (other.CompareTag("Enemy"))
-        {
-            if (isPlayerBullet)
-            {
-                other.GetComponent<BasicEnemyMovement>().die();
-            }
-            else
-            {
-                //do nothing
-            }
-        }
-        else if (other.CompareTag("Bullet"))
-        {
-            //do nothing
-        }
-        else
-        {
-            DestroyBullet();
-        }
-    }*/
 }
