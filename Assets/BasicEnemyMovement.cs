@@ -37,7 +37,7 @@ public class BasicEnemyMovement : MonoBehaviour
     {
         if (DangerManager.Instance.Danger >= 60)
         {
-            healthPickupDropChance = Mathf.Clamp(healthPickupDropChance - (DangerManager.Instance.Danger / 3), 0, healthPickupDropChance);
+            healthPickupDropChance *= 0.4f;
         }
 
         controller = GetComponent<CharacterController2D>();
