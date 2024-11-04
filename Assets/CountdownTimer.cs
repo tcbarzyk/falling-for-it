@@ -9,6 +9,7 @@ public class CountdownTimer : MonoBehaviour
     public TextMeshProUGUI timerText;                // Assign a UI Text element to display the timer
     private float timeRemaining;
     private bool timerIsRunning = false;
+    public PlayerCombat player;
 
     void Start()
     {
@@ -32,6 +33,7 @@ public class CountdownTimer : MonoBehaviour
                 timeRemaining = 0;
                 timerIsRunning = false;
                 DisplayTime(timeRemaining);  // Final display to show "00:00.000"
+                player.gameOver();
             }
         }
     }

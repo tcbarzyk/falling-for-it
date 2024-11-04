@@ -47,7 +47,12 @@ public class PlayerMovement : MonoBehaviour
     public GameObject fallEffect;
     public Transform fallEffectSpawnPoint;
     public AudioSource jumpSound;
-
+    public GameObject winArea;
+    public AudioSource winSound;
+    public AudioSource enemyAttackSound;
+    public AudioSource gameMusic;
+    public ParticleSystem dashEffect;
+    public GameObject diveLight;
 
     [HideInInspector]
     private float normalizedHorizontalSpeed = 0;
@@ -99,6 +104,13 @@ public class PlayerMovement : MonoBehaviour
         {
             hitJumpPad = true;
         }
+        if (col.CompareTag("WinArea"))
+        {
+            winArea.SetActive(true);
+            gameMusic.Stop();
+            winSound.Play();
+            Time.timeScale = 0f;
+        }
         Debug.Log("onTriggerEnterEvent: " + col.gameObject.name);
     }
 
@@ -110,6 +122,7 @@ public class PlayerMovement : MonoBehaviour
             if (enemy.canAttack && !isDownDashing)
             {
                 combat.takeHit(enemy.damage);
+                enemyAttackSound.Play();
                 enemy.timeToNextAttack = enemy.attackCooldown;
                 enemy.canAttack = false;
             }
@@ -161,7 +174,7 @@ public class PlayerMovement : MonoBehaviour
                 jumpSound.Play();
             }
         }
-        else
+        else if (!_animator.GetCurrentAnimatorStateInfo(0).IsName("Player_Attack"))
         {
             _animator.Play(Animator.StringToHash("Player_Jump"));
         }
@@ -172,7 +185,7 @@ public class PlayerMovement : MonoBehaviour
             if (transform.localScale.x < 0f)
                 transform.localScale = new Vector3(-transform.localScale.x, transform.localScale.y, transform.localScale.z);
 
-            if (_controller.isGrounded)
+            if (_controller.isGrounded && !_animator.GetCurrentAnimatorStateInfo(0).IsName("Player_Attack"))
             {
                 _animator.Play(Animator.StringToHash("Player_Run"));
             }
@@ -183,7 +196,7 @@ public class PlayerMovement : MonoBehaviour
             if (transform.localScale.x > 0f)
                 transform.localScale = new Vector3(-transform.localScale.x, transform.localScale.y, transform.localScale.z);
 
-            if (_controller.isGrounded)
+            if (_controller.isGrounded && !_animator.GetCurrentAnimatorStateInfo(0).IsName("Player_Attack"))
             {
                 _animator.Play(Animator.StringToHash("Player_Run"));
             }
@@ -191,7 +204,7 @@ public class PlayerMovement : MonoBehaviour
         else
         {
             normalizedHorizontalSpeed = 0;
-            if (_controller.isGrounded)
+            if (_controller.isGrounded && !_animator.GetCurrentAnimatorStateInfo(0).IsName("Player_Attack"))
             {
                 _animator.Play(Animator.StringToHash("Player_Idle"));
             }
@@ -204,7 +217,10 @@ public class PlayerMovement : MonoBehaviour
             {
                 _velocity.y = Mathf.Sqrt(2f * jumpHeight * -gravity);
                 isJumping = true;
-                _animator.Play(Animator.StringToHash("Player_Jump"));
+                if (!_animator.GetCurrentAnimatorStateInfo(0).IsName("Player_Attack"))
+                {
+                    _animator.Play(Animator.StringToHash("Player_Jump"));
+                }
                 jumpSound.Play();
             }
             else
@@ -230,10 +246,15 @@ public class PlayerMovement : MonoBehaviour
             {
                 timeToNextDownDash = downDashCooldown;
                 isDownDashing = false;
+                dashEffect.Stop();
+                diveLight.SetActive(false);
             }
             _velocity.y = jumpPadSpeed;
             isJumping = true;
-            _animator.Play(Animator.StringToHash("Player_Jump"));
+            if (!_animator.GetCurrentAnimatorStateInfo(0).IsName("Player_Attack"))
+            {
+                _animator.Play(Animator.StringToHash("Player_Jump"));
+            }
             jumpSound.Play();
             hitJumpPad = false;
         }
@@ -243,6 +264,8 @@ public class PlayerMovement : MonoBehaviour
             isDownDashing = true;
             startingVelocityY = _velocity.y;
             diveSound.Play();
+            dashEffect.Play();
+            diveLight.SetActive(true);
         }
         else if (_controller.isGrounded)
         {
@@ -254,11 +277,12 @@ public class PlayerMovement : MonoBehaviour
                     Instantiate(fallEffect, fallEffectSpawnPoint.position, Quaternion.identity);
                     if (isDownDashing)
                     {
-                        combat.takeHit(-_controller.airVelocityY * fallDamageFactor * fallDamageDashResistanceFactor);
+                        combat.takeHit((Mathf.Abs(_controller.airVelocityY * _controller.airVelocityY)) * fallDamageFactor * fallDamageDashResistanceFactor);
                     }
                     else
                     {
-                        combat.takeHit(-_controller.airVelocityY * fallDamageFactor);
+                        print(Mathf.Abs(_controller.airVelocityY * _controller.airVelocityY));
+                        combat.takeHit((Mathf.Abs(_controller.airVelocityY * _controller.airVelocityY)) * fallDamageFactor);
                     }
                 }
                 if (isDownDashing)
@@ -269,6 +293,8 @@ public class PlayerMovement : MonoBehaviour
                 justHitGround = false;
             }
             isDownDashing = false;
+            dashEffect.Stop();
+            diveLight.SetActive(false);
         }
 
         if (!_controller.isGrounded)

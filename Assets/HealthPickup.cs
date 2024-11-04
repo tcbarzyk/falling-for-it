@@ -10,4 +10,13 @@ public class HealthPickup : MonoBehaviour
         GameObject.Find("PickupAudioSource").GetComponent<AudioSource>().Play();
         Destroy(gameObject);
     }
+
+    public void Awake()
+    {
+        float danger = DangerManager.Instance.Danger;
+        if (danger > 60)
+        {
+            healAmount *= 0.6f;
+        }
+    }
 }
