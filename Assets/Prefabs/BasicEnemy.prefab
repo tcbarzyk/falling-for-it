@@ -198,7 +198,7 @@ MonoBehaviour:
   attackingPlayer: 0
   healthPickup: {fileID: 2901982532709296478, guid: 40b1ee194526f4346a5d13385224a3be, type: 3}
   healthPickupAmount: 100
-  healthPickupDropChance: 0.6
+  healthPickupDropChance: 0.5
   dieEffect: {fileID: 6566798318717490157, guid: 4af6110642e096a46a73943b9ff96aaf, type: 3}
 --- !u!1 &3418453236395165289
 GameObject:
