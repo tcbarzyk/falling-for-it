@@ -1,3 +1,4 @@
+using ChristinaCreatesGames.Animations;
 using Prime31;
 using System.Collections;
 using System.Collections.Generic;
@@ -53,6 +54,9 @@ public class PlayerMovement : MonoBehaviour
     public AudioSource gameMusic;
     public ParticleSystem dashEffect;
     public GameObject diveLight;
+    public SquashAndStretch landSquash;
+    public SquashAndStretch jumpStretch;
+    public SquashAndStretch diveStretch;
 
     [HideInInspector]
     private float normalizedHorizontalSpeed = 0;
@@ -65,13 +69,13 @@ public class PlayerMovement : MonoBehaviour
     private bool isDownDashing;
     private float jumpBufferCounter = 0f;
     private Vector2 currentVelocity = Vector2.zero;
-    private Animator _animator;
+    public Animator _animator;
     private PlayerCombat combat;
 
     void Awake()
     {
         _controller = GetComponent<CharacterController2D>();
-        _animator = GetComponent<Animator>();
+        //_animator = GetComponent<Animator>();
         combat = GetComponent<PlayerCombat>();
 
         // listen to some events for illustration purposes
@@ -172,6 +176,7 @@ public class PlayerMovement : MonoBehaviour
                 isJumping = true;
                 jumpBufferCounter = 0f; // Reset buffer after jump
                 jumpSound.Play();
+                jumpStretch.PlaySquashAndStretch();
             }
         }
         else if (!_animator.GetCurrentAnimatorStateInfo(0).IsName("Player_Attack"))
@@ -222,6 +227,7 @@ public class PlayerMovement : MonoBehaviour
                     _animator.Play(Animator.StringToHash("Player_Jump"));
                 }
                 jumpSound.Play();
+                jumpStretch.PlaySquashAndStretch();
             }
             else
             {
@@ -257,6 +263,7 @@ public class PlayerMovement : MonoBehaviour
             }
             jumpSound.Play();
             hitJumpPad = false;
+            jumpStretch.PlaySquashAndStretch();
         }
 
         //handle downward dash
@@ -266,6 +273,7 @@ public class PlayerMovement : MonoBehaviour
             diveSound.Play();
             dashEffect.Play();
             diveLight.SetActive(true);
+            diveStretch.PlaySquashAndStretch();
         }
         else if (_controller.isGrounded)
         {
@@ -275,6 +283,7 @@ public class PlayerMovement : MonoBehaviour
                 if (_controller.airVelocityY < -fallDamageVelocityThreshold && !hitJumpPad)
                 {
                     Instantiate(fallEffect, fallEffectSpawnPoint.position, Quaternion.identity);
+                    landSquash.PlaySquashAndStretch();
                     if (isDownDashing)
                     {
                         combat.takeHit((Mathf.Abs(_controller.airVelocityY * _controller.airVelocityY)) * fallDamageFactor * fallDamageDashResistanceFactor);

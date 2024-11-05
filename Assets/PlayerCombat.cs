@@ -38,8 +38,8 @@ public class PlayerCombat : MonoBehaviour
     public AudioSource diveHitSound;
     public Light2D bigDiveLight;
 
-    private Animator animator;
-    private SpriteRenderer entitySprite;
+    public Animator animator;
+    public SpriteRenderer entitySprite;
     private Material entityMaterial;
     private CinemachineImpulseSource impulseSource;
 
@@ -47,8 +47,8 @@ public class PlayerCombat : MonoBehaviour
     void Start()
     {
         health = maxHealth;
-        animator = GetComponent<Animator>();
-        entitySprite = GetComponent<SpriteRenderer>();
+        //animator = GetComponent<Animator>();
+        //entitySprite = GetComponent<SpriteRenderer>();
         impulseSource = GetComponent<CinemachineImpulseSource>();
         entityMaterial = entitySprite.material;
     }
