@@ -12,6 +12,7 @@ public class PlayerCombat : MonoBehaviour
     [SerializeField] private float flashTime = 0.2f;
     [SerializeField] Color flashcolor = Color.white;
     public GameOverScreen gameOverScreen;
+    public GameOverScreen gameOverOutOfTimeScreen;
 
     [Header("Invincibility")]
     [SerializeField] private bool hasIFrames = false;
@@ -89,6 +90,11 @@ public class PlayerCombat : MonoBehaviour
     {
         gameOverScreen.Setup();
         //end game
+    }
+
+    public void gameOverOutOfTime()
+    {
+        gameOverOutOfTimeScreen.Setup();
     }
 
     // Update is called once per frame
